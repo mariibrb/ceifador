@@ -569,6 +569,32 @@ def bloco_saida(texto: str):
 
 if modo.startswith("Ceifador 1"):
     st.subheader("Ceifador 1 — Lotes por Matriz (geral)")
+    with st.expander("O que este Ceifador faz (detalhado)", expanded=True):
+        st.markdown(
+            """
+**Objetivo**: pegar **todos os XMLs** encontrados em uma pasta (inclusive dentro de `.zip` e `.zip` dentro de `.zip`)
+e gerar arquivos `.zip` em **lotes**, separados por **matriz/origem**.
+
+**Entradas**
+- **Pasta raiz**: pode ser caminho local ou de rede (ex.: `P:\\...`).
+
+**O que ele lê**
+- XML solto em qualquer subpasta.
+- ZIP em qualquer nível.
+- ZIP dentro de ZIP (tipo “matriosca”).
+
+**Como ele organiza**
+- Ele identifica uma **matriz** pelo primeiro nível da pasta (ou pelo nome do ZIP “principal”).
+- Para cada matriz ele cria: `NOME_DA_MATRIZ_lote1.zip`, `NOME_DA_MATRIZ_lote2.zip`, ...
+- Dentro do lote ele tenta manter uma **ordem natural** (sequência numérica no nome/caminho).
+
+**Saída (onde salva)**
+- Os lotes `.zip` são salvos na **mesma pasta raiz informada**.
+
+**Quando usar**
+- Quando você quer **lotear tudo** (sem planilha, sem filtro).
+            """
+        )
     pasta = st.text_input("Pasta raiz (pode ser caminho de rede)", value="")
     col1, col2 = st.columns(2)
     with col1:
@@ -589,6 +615,36 @@ if modo.startswith("Ceifador 1"):
 
 elif modo.startswith("Ceifador 2"):
     st.subheader("Ceifador 2 — Lotes por Excel (nota e série)")
+    with st.expander("O que este Ceifador faz (detalhado)", expanded=True):
+        st.markdown(
+            """
+**Objetivo**: ler um Excel com a lista de **notas** e **série** desejadas, procurar os XMLs correspondentes
+na pasta (inclusive dentro de ZIP/ZIP aninhado) e gerar lotes `.zip` com **somente** os XMLs que batem.
+
+**Entradas**
+- **Pasta raiz**: onde estão XML/ZIP.
+- **Excel (.xlsx)**: pode ser por caminho **ou upload**.
+
+**Formato do Excel (flexível)**
+- Pode ter colunas tipo: `Inicial`, `Final`, `Série` (faixas), **ou**
+- colunas tipo: `Nota`, `Série` (linha a linha).
+O Ceifador tenta reconhecer automaticamente pelo cabeçalho.
+
+**Critério de validação**
+- Ele abre cada XML e procura:
+  - `<nNF>NUMERO_DA_NOTA</nNF>`
+  - `<serie>SERIE</serie>`
+- Só entra no lote se **nota + série** estiverem na planilha.
+
+**Saída (onde salva)**
+- Salva na **mesma pasta raiz informada**.
+- Nome dos lotes por matriz: `NOME_DA_MATRIZ_localizador_lote1.zip`, `..._lote2.zip`
+- Dentro do zip, o nome do XML ganha prefixo `s{serie}_n{nota}_...` para facilitar conferência.
+
+**Quando usar**
+- Quando você quer XMLs **de uma lista específica** (planilha de faltantes / faixas).
+            """
+        )
     pasta = st.text_input("Pasta raiz (pode ser caminho de rede)", value="")
 
     st.markdown("**Excel**: você pode informar o caminho ou fazer upload.")
@@ -632,6 +688,34 @@ elif modo.startswith("Ceifador 2"):
 
 else:
     st.subheader("Ceifador 3 — Validar OK (mover duplicadas sem OK)")
+    with st.expander("O que este Ceifador faz (detalhado)", expanded=True):
+        st.markdown(
+            """
+**Objetivo**: quando você tem dois arquivos “parecidos” (ex.: um com `OK` no início do nome),
+ele valida se eles são **o mesmo arquivo de verdade** comparando o **conteúdo** (hash SHA-256).
+
+**Exemplo típico**
+- `CONTABILIDADE - NASCEL NF 1663.pdf`
+- `OK CONTABILIDADE - NASCEL NF 1663.pdf`
+
+**Como ele decide**
+- Remove acento, pontuação e espaços do nome, e ignora prefixos (padrão: `ok`).
+- Se os nomes “normalizados” batem (ou são bem parecidos) ele compara o **hash SHA-256**.
+
+**Saídas**
+- Sempre gera um CSV na pasta analisada:
+  - `ceifador_v3_relatorio_semelhantes.csv`
+- Coluna `mesmo_arquivo = SIM` significa: conteúdo idêntico.
+
+**Ação (muito importante)**
+- `relatorio`: **não move nada**, só gera o CSV.
+- `mover_sem_ok`: mantém o arquivo com **OK** e move a duplicada **sem OK** para:
+  - `duplicadas_sem_ok\\`
+
+**Quando usar**
+- Quando você quer “limpar duplicados” sem perder o controle de escrituração (mantendo os `OK`).
+            """
+        )
     pasta = st.text_input("Pasta raiz (pode ser caminho de rede)", value="")
 
     col1, col2, col3 = st.columns(3)
